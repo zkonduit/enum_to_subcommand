@@ -97,10 +97,39 @@ pub fn to_subcommand(input_enum: proc_macro::TokenStream) -> proc_macro::TokenSt
 
             quote! {
                 #name::#variant_name { #(#fields),* } => {
-                    let mut map = vec![stringify!(#variant_name).to_lowercase()];
+                    // split Pascal variant or Camel case into kebab case. GenWitness becomes gen-witness
+                    // then push it to the map
+                    // this is camel or pascal case
+                    let variant = format!("{}", stringify!(#variant_name));
+                    // now convert to kebab case
+                    let variant = variant.chars().fold(String::new(), |mut acc, c| {
+                        if c.is_uppercase() {
+                            if !acc.is_empty() {
+                                acc.push('-');
+                            }
+                            acc.push(c.to_lowercase().next().unwrap());
+                        } else {
+                            acc.push(c);
+                        }
+                        acc
+                    });
+
+                    let mut map = vec![variant];
                     #(
-                        map.push(format!("--{}", #keys));
-                        map.push(format!("{}", #fields));
+                        // if field is not struct then to_string else try and call to_flags on the struct
+                        if #fields.is_optional() {
+                            if let Some(val) = #fields.to_flags().first() {
+                                map.push(format!("--{}", #keys));
+                                map.extend(#fields.to_flags());
+                            }
+                        } else {
+                            if #fields.is_flag() {
+                                map.extend(#fields.to_flags());
+                            } else if #fields.is_value() {
+                                map.push(format!("--{}", #keys));
+                                map.extend(#fields.to_flags());
+                            }
+                        }
                     )*
                     map
                 }
@@ -120,4 +149,64 @@ pub fn to_subcommand(input_enum: proc_macro::TokenStream) -> proc_macro::TokenSt
 
     proc_macro::TokenStream::from(expanded)
     //
+}
+
+/// Converts a given input struct into a BTreeMap where the keys are the attribute names assigned to
+/// the values of the entries.
+#[proc_macro_derive(ToFlags, attributes(rename))]
+pub fn to_flags(input_struct: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let ast = syn::parse_macro_input!(input_struct as DeriveInput);
+
+    // check for struct type and parse out fields
+    let fields = match ast.data {
+        Data::Struct(st) => st.fields,
+        _ => panic!("Implementation must be a struct"),
+    };
+
+    // parse out all the field names in the struct as `Ident`s
+    let idents: Vec<&Ident> = fields
+        .iter()
+        .filter_map(|field| field.ident.as_ref())
+        .collect::<Vec<&Ident>>();
+
+    // convert all the field names into strings
+    let keys: Vec<String> = idents
+        .clone()
+        .iter()
+        .map(|ident| ident.to_string())
+        .map(|name| {
+            // replace _ with - in the field names
+            name.replace("_", "-")
+        })
+        .collect::<Vec<String>>();
+
+    // get the name identifier of the struct input AST
+    let name: &Ident = &ast.ident;
+    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+
+    // start codegen for to_flags functionality that converts a struct into a set of flags
+    let tokens = quote! {
+
+        impl #impl_generics ToFlags for #name #ty_generics #where_clause {
+
+            fn to_flags(&self) -> Vec<String> {
+                let mut map = vec![];
+                #(
+                    map.push(format!("--{}", #keys));
+                    map.extend(self.#idents.to_flags());
+                )*
+                map
+            }
+
+            fn is_flag(&self) -> bool {
+                true
+            }
+
+            fn is_value(&self) -> bool {
+                false
+            }
+
+        }
+    };
+    proc_macro::TokenStream::from(tokens)
 }

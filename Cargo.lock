@@ -3,15 +3,6 @@
 version = 3
 
 [[package]]
-name = "enum_to_subcommand"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -38,6 +29,29 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tosubcommand"
+version = "0.1.0"
+dependencies = [
+ "tosubcommand_derive",
+]
+
+[[package]]
+name = "tosubcommand_derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "tosubcommand_example"
+version = "0.0.0"
+dependencies = [
+ "tosubcommand",
 ]
 
 [[package]]
