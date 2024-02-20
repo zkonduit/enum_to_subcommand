@@ -1,22 +1,25 @@
-use tosubcommand::ToSubcommand;
 use std::fmt::{Formatter, Result};
+use tosubcommand::ToSubcommand;
 
 pub enum Modes {
-    One, 
+    One,
     Two,
     Three,
 }
 
 impl std::fmt::Display for Modes {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}", match self {
-            Modes::One => "one",
-            Modes::Two => "two",
-            Modes::Three => "three",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Modes::One => "one",
+                Modes::Two => "two",
+                Modes::Three => "three",
+            }
+        )
     }
 }
-
 
 #[derive(ToSubcommand)]
 enum Cmd {
@@ -40,7 +43,7 @@ enum Cmd {
     Nested {
         mode: Modes,
         level: i32,
-    }
+    },
 }
 
 fn main() {
@@ -72,7 +75,10 @@ fn main() {
     println!("{}", long.to_subcommand().join(" "));
     println!("{}", nested.to_subcommand().join(" "));
 
-    assert_eq!(mock.to_subcommand().join(" "), "mock --with with --without without");
+    assert_eq!(
+        mock.to_subcommand().join(" "),
+        "mock --with with --without without"
+    );
     assert_eq!(empty.to_subcommand().join(" "), "empty");
     assert_eq!(
         run.to_subcommand().join(" "),

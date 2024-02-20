@@ -89,7 +89,6 @@ pub fn to_subcommand(input_enum: proc_macro::TokenStream) -> proc_macro::TokenSt
 
             let fields = fields.clone().collect::<Vec<_>>();
 
-
             let keys = keys.iter().map(|key| {
                 quote! {
                     #key
