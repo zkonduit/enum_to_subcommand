@@ -73,8 +73,6 @@ pub fn to_subcommand(input_enum: proc_macro::TokenStream) -> proc_macro::TokenSt
     let name: &Ident = &ast.ident;
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
-    println!("{:?}", name);
-
     // create a match statement for each variant in the enum
     let match_statements = variant_keys
         .iter()
@@ -91,15 +89,12 @@ pub fn to_subcommand(input_enum: proc_macro::TokenStream) -> proc_macro::TokenSt
 
             let fields = fields.clone().collect::<Vec<_>>();
 
-            println!("{:?}", keys);
 
             let keys = keys.iter().map(|key| {
                 quote! {
                     #key
                 }
             });
-
-
 
             quote! {
                 #name::#variant_name { #(#fields),* } => {
