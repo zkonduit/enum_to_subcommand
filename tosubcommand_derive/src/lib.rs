@@ -191,9 +191,21 @@ pub fn to_flags(input_struct: proc_macro::TokenStream) -> proc_macro::TokenStrea
 
             fn to_flags(&self) -> Vec<String> {
                 let mut map = vec![];
+                // check if optional
                 #(
-                    map.push(format!("--{}", #keys));
-                    map.extend(self.#idents.to_flags());
+                    if self.#idents.is_optional() {
+                    if let Some(val) = self.#idents.to_flags().first() {
+                        map.push(format!("--{}", #keys));
+                        map.extend(self.#idents.to_flags());
+                    }
+                } else {
+                    if self.#idents.is_flag() {
+                        map.extend(self.#idents.to_flags());
+                    } else if self.#idents.is_value() {
+                        map.push(format!("--{}", #keys));
+                        map.extend(self.#idents.to_flags());
+                    }
+                }
                 )*
                 map
             }

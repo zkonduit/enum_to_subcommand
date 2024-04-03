@@ -13,6 +13,8 @@ pub struct SubStruct {
     a: i32,
     b: i32,
     c: i32,
+    d: Option<i32>,
+    e: Option<i32>,
 }
 
 impl std::fmt::Display for Modes {
@@ -96,7 +98,13 @@ fn main() {
         vec: vec![1, 2, 3],
         opt: Some(1),
         opt2: None,
-        sub: SubStruct { a: 0, b: 1, c: 2 },
+        sub: SubStruct {
+            a: 0,
+            b: 1,
+            c: 2,
+            d: None,
+            e: Some(3),
+        },
     };
     let gen_something = Cmd::GenSomething {
         something_to_gen: 2,
@@ -126,7 +134,7 @@ fn main() {
     );
     assert_eq!(
         nested.to_subcommand().join(" "),
-        "nested --mode one --level 1 --vec 1,2,3 --opt 1 --a 0 --b 1 --c 2"
+        "nested --mode one --level 1 --vec 1,2,3 --opt 1 --a 0 --b 1 --c 2 --e 3"
     );
     assert_eq!(
         gen_something.to_subcommand().join(" "),
